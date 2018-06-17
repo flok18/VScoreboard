@@ -37,21 +37,22 @@ static void Print_All_GUIDs(void)
 
 BOOL Picture_WIC_Load(const char* FileName, Picture* Pic, BOOL Do_Flip_Y)
 {
-    BOOL                    Return_Status     = FALSE;
+    BOOL                    Return_Status           = FALSE;
     HRESULT                 hr;
     wchar_t                 FileNameU[MAX_PATH];
-    IWICImagingFactory*     m_pIWICFactory    = NULL;
-    IWICBitmapDecoder*      pDecoder          = NULL;
-    IWICBitmapFrameDecode*  pFrame            = NULL;
-    IWICBitmapSource*       pSource           = NULL;
-    UINT                    uiWidth           = 0;
-    UINT                    uiHeight          = 0;
-    UINT                    cbStride          = 0;
-    UINT                    cbImage           = 0;
+    IWICImagingFactory*     m_pIWICFactory          = NULL;
+    IWICBitmapDecoder*      pDecoder                = NULL;
+    IWICBitmapFrameDecode*  pFrame                  = NULL;
+    IWICBitmapSource*       pSource                 = NULL;
+    UINT                    uiWidth                 = 0;
+    UINT                    uiHeight                = 0;
+    UINT                    cbStride                = 0;
+    UINT                    cbImage                 = 0;
     WICPixelFormatGUID      pixelFormat;
-    IWICFormatConverter*    pConverter        = NULL;
-    IWICBitmapSource*       pSourceRgb        = NULL;
-    BYTE*                   ImagePixels       = NULL;
+    IWICFormatConverter*    pConverter              = NULL;
+    IWICBitmapSource*       pSourceRgb              = NULL;
+    BOOL                    HasColorsConverted      = FALSE;
+    BYTE*                   ImagePixels             = NULL;
 
 
 #ifdef __PRINT_GUIDs
@@ -88,8 +89,8 @@ BOOL Picture_WIC_Load(const char* FileName, Picture* Pic, BOOL Do_Flip_Y)
                             // Do we need to Convert...
                             if (IsEqualGUID(&pixelFormat, &MY_GUID_WICPixelFormat32bppBGR))
                             {
-                                // Achtung: Bei Freigeben undbedingt Nullen bzw. auf NULL pruefen.
-                                pSourceRgb = pSource;
+                                pSourceRgb         = pSource;
+								HasColorsConverted = FALSE;
                             }
                             else
                             {
@@ -103,7 +104,11 @@ BOOL Picture_WIC_Load(const char* FileName, Picture* Pic, BOOL Do_Flip_Y)
                                     {
                                         // Store the converted bitmap as IWICBitmapSource
                                         hr = pConverter->lpVtbl->QueryInterface(pConverter, &MY_IID_IWICBitmapSource, (void**)(&pSourceRgb));
-                                        if (FAILED(hr))
+                                        if (SUCCEEDED(hr))
+										{
+											HasColorsConverted = TRUE;
+										}
+										else
                                         {
                                             pSourceRgb = NULL;
                                         }
@@ -149,7 +154,10 @@ BOOL Picture_WIC_Load(const char* FileName, Picture* Pic, BOOL Do_Flip_Y)
 									}
 								}
 
-                                COM_PTR_RELEASE(pSourceRgb);
+								if (HasColorsConverted)
+								{
+									COM_PTR_RELEASE(pSourceRgb);
+								}
                             }
                         }
                     }
