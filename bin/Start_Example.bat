@@ -2,7 +2,7 @@
 
 cd /d "%~dp0"
 
-start "VScoreboard" Scoreboard.exe Bsp_Layout1.ini
+start "VScoreboard" Scoreboard.exe Example_Layout\Bsp_Layout1.ini
 
 
 
